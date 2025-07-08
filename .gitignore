@@ -1,0 +1,5 @@
+# Ignore Python virtual environment
+.venv/
+
+# Ignore Google API credentials
+client_secrets.json
