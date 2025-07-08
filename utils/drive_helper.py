@@ -6,11 +6,18 @@ from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
 import json
 
-CONFIG_DIR = "/MyDrive/Colab Notebooks/.config/"
 
 @st.cache_resource(show_spinner=False)
 def authenticate_drive():
+    import json
+    client_config = {"web": dict(st.secrets["web"])}
+    secrets_path = "/tmp/client_secrets.json"
+
+    with open(secrets_path, "w") as f:
+        json.dump(client_config, f)
+
     gauth = GoogleAuth()
+    gauth.LoadClientConfigFile(secrets_path)
     gauth.LocalWebserverAuth()
     drive = GoogleDrive(gauth)
     return drive
