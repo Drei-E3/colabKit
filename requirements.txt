@@ -2,3 +2,6 @@ streamlit
 PyDrive2
 oauth2client
 streamlit-file-browser
+google-auth 
+google-auth-oauthlib 
+requests-oauthlib
