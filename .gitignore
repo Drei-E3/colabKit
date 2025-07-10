@@ -3,3 +3,16 @@
 
 # Ignore Google API credentials
 client_secrets.json
+
+# ignore Streamlit Cloud secrets
+secrets.toml
+.streamlit/
+# Ignore all files in the .streamlit directory
+.streamlit/*
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+# Ignore Python bytecode files
+__pycache__/
+*.py[cod]
+# Ignore log files
+*.log
