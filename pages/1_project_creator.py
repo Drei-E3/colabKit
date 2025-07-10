@@ -3,7 +3,7 @@
 import streamlit as st
 import os
 import json
-from utils.drive_browser import drive_folder_picker
+from utils.drive_browser import drive_file_browser
 from utils.json_editor import render_editor, build_json
 
 # show flash message if exists (after redirect)
@@ -21,7 +21,7 @@ st.markdown("### 📂 Step 1: Select Project Folder from Drive")
 
 # Drive Folder Picker
 render_id_drive_folder_picker = 0
-folder_path, folder_id = drive_folder_picker(st.session_state.drive,render_id_drive_folder_picker)
+folder_path, folder_id = drive_file_browser(st.session_state.drive)
 
 # If user selected a folder, update the editor's "path" value
 if folder_path:

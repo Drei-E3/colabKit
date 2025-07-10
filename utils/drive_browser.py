@@ -1,99 +1,59 @@
+import os
+import streamlit as st
+from streamlit_file_browser import st_file_browser
+
+def path_to_title(path_chain):
+    return " › ".join(folder["title"] for folder in path_chain)
+
 # utils/drive_browser.py
 
 import streamlit as st
-from pydrive2.drive import GoogleDrive
+from streamlit_file_browser import st_file_browser
 
+def drive_file_browser(drive, key="gdrive_picker", start_id="root"):
+    if key not in st.session_state:
+        st.session_state[key] = {
+            "chain": [{"id": start_id, "title": "MyDrive"}],
+            "selected_id": None
+        }
 
-def get_subfolders(drive: GoogleDrive, parent_id: str):
-    """List subfolders under a given folder ID."""
-    query = f"'{parent_id}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false"
-    folder_list = drive.ListFile({'q': query}).GetList()
-    return folder_list
+    state = st.session_state[key]
+    chain = state["chain"]
+    current = chain[-1]
 
-def get_folder_name(drive: GoogleDrive, folder_id: str) -> str:
-    """Get folder name by ID."""
-    try:
-        file = drive.CreateFile({'id': folder_id})
-        file.FetchMetadata(fields='title')
-        return file['title']
-    except:
-        return "[Unknown Folder]"
+    # 面包屑
+    st.markdown("📁 **Path:** " + " / ".join([c["title"] for c in chain]))
 
-def drive_folder_picker(drive: GoogleDrive,render_id_drive_folder_picker , start_id: str = "root", label: str = "📂 Browse Drive Folders",):
-    """
-    Interactive folder browser. Returns selected folder path and ID.
-    """
-    
-    render_id_drive_folder_picker = render_id_drive_folder_picker
-    if "folder_stack" not in st.session_state:
-        st.session_state.folder_stack = [start_id]  # Stack of folder IDs
-    if "state" not in st.session_state:
-        st.session_state["state"] = {}
-        
-        
-    current_folder_id = st.session_state.folder_stack[-1]
-    current_folder_name = get_folder_name(drive, current_folder_id)
+    # 当前层所有内容
+    query = f"'{current['id']}' in parents and trashed=false"
+    items = drive.ListFile({'q': query}).GetList()
 
-    st.markdown(f"**Current Folder:** `/{'/'.join([get_folder_name(drive, fid) for fid in st.session_state.folder_stack])}`")
+    # 构造结构
+    files = []
+    for item in items:
+        files.append({
+            "name": item["title"],
+            "type": "directory" if item["mimeType"] == "application/vnd.google-apps.folder" else "file",
+            "metadata": {"id": item["id"]}
+        })
 
-    subfolders = get_subfolders(drive, current_folder_id)
-    
-    def clean_folder_label(name, max_len=25):
-        return (name[:max_len] + '...') if len(name) > max_len else name
-    
-    col_a, col_b = st.columns(2)
+    event = st_file_browser(
+        path=files,
+        key=key,
+        show_choose_folder=True,
+        show_choose_file=False,
+        show_upload_file=False,
+        show_new_folder=False,
+        show_delete_file=False,
+        show_rename_folder=False
+    )
 
-    def format_folder_label(title: str, max_length: int = 25) -> str:
-        plain = f"📁 {title}"
-        if len(plain) > max_length:
-            return plain[:max_length - 3] + "..."
-        else:
-            return plain.ljust(max_length)
+    if event:
+        if event["type"] == "directory":
+            state["chain"].append({"id": event["metadata"]["id"], "title": event["name"]})
+            st.experimental_rerun()
 
-    for idx, folder in enumerate(subfolders):
-        label = format_folder_label(folder['title'])
-
-        if idx % 2 == 0:
-            with col_a:
-                if st.button(label, key=folder['id']):
-                    st.session_state.folder_stack.append(folder['id'])
-                    st.rerun()
-        else:
-            with col_b:
-                if st.button(label, key=folder['id']):
-                    st.session_state.folder_stack.append(folder['id'])
-                    st.rerun()
-
-    # ：Go Back | Create Folder | Select This Folder
-    st.markdown("---")
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        if st.button("🔙 Go Back"):
-            if len(st.session_state.folder_stack) > 1:
-                st.session_state.folder_stack.pop()
-                st.rerun()
-            else:
-                st.warning("You are already at the root folder.")
-
-    with col2:
-        with st.popover("📁 Create Folder"):
-            new_folder_name = st.text_input("Folder name", key="new_folder_input")
-            if st.button("➕ Create", key="create_folder_btn") and new_folder_name.strip():
-                new_folder = drive.CreateFile({
-                    'title': new_folder_name.strip(),
-                    'mimeType': 'application/vnd.google-apps.folder',
-                    'parents': [{'id': current_folder_id}]
-                })
-                new_folder.Upload()
-                st.rerun()
-
-    with col3:
-        selected = st.button("✅ Select This Folder")
-        if selected:
-            selected_id = current_folder_id
-            selected_path = " / ".join([get_folder_name(drive, fid) for fid in st.session_state.folder_stack])
-            return selected_path, selected_id
-    
-    st.session_state["state"][render_id_drive_folder_picker] = "rendered"
-    return None, None
+    # 返回完整路径和当前文件夹ID
+    full_path = "/".join([c["title"] for c in chain[1:]]) 
+    print(f"Current folder path: {full_path}")
+    return full_path, current["id"]
