@@ -1,12 +1,16 @@
 # app.py
 
 import streamlit as st
-from utils.drive_helper import authenticate_drive, ensure_config_folder,list_config_files
+from utils.drive_oauth import (
+    get_authorization_url,
+    exchange_code_for_tokens,
+    get_drive_service)
+from utils.drive_helper import ensure_config_folder,list_config_files
 from utils.config_handler import list_project_configs
 
 st.set_page_config(
     page_title="ColabKit",
-    page_icon="⚡",
+    page_icon="🗂️",
     layout="wide",
     menu_items={
         "About": "A visual tool to simplify Colab project setup and config management."
@@ -21,12 +25,17 @@ Welcome to **ColabKit** – a lightweight tool for managing Google Colab project
 # -- Google Drive Login Section --
 st.subheader("🔐 Google Drive Login")
 
-if "drive" not in st.session_state:
-    if st.button("🔗 Connect to Google Drive"):
-        with st.spinner("Authorizing..."):
+if "drive_service" not in st.session_state:
+    auth_url = get_authorization_url()
+    st.markdown(f"[🔗 Click here to authorize with Google Drive]({auth_url})")
+
+    code = st.text_input("Paste the authorization code here:")
+    if st.button("🔐 Submit Code") and code:
+        with st.spinner("Exchanging code for tokens..."):
             try:
-                drive = authenticate_drive()
-                st.session_state.drive = drive
+                token_dict = exchange_code_for_tokens(code)
+                drive_service = get_drive_service(token_dict)
+                st.session_state.drive_service = drive_service
                 st.success("✅ Google Drive connected successfully!")
             except Exception as e:
                 st.error(f"❌ Failed to connect: {e}")
@@ -34,14 +43,13 @@ else:
     st.success("✅ You are already connected to Google Drive.")
     
 # -- init button --
-if "drive" in st.session_state:
+if "drive_service" in st.session_state:
     if st.button("🔄 Initialize Workspace"):
         with st.spinner("Initializing..."):
-            drive = st.session_state.drive
-            config_folder_id = ensure_config_folder(drive)
+            drive_service = st.session_state.drive_service
+            config_folder_id = ensure_config_folder(drive_service)
             st.session_state.config_folder_id = config_folder_id
-            #projects = list_project_configs(drive, config_folder_id)
-            projects = list_config_files(drive)
+            projects = list_config_files(drive_service)
             st.session_state.projects = projects
 
         if len(projects) == 0:
