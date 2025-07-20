@@ -1,4 +1,4 @@
-# pages/1_🔧_Create_Config.py
+# pages/1_project_creator.py
 
 import streamlit as st
 import os

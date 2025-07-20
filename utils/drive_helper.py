@@ -1,3 +1,7 @@
+# utils/drive_helper.py
+# This module provides utilities for managing Google Drive configurations
+# It includes functions to ensure the existence of configuration folders,
+# list configuration files, delete files, and retrieve folder IDs.
 import streamlit as st
 import json
 from googleapiclient.discovery import Resource

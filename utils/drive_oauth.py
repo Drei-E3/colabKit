@@ -1,3 +1,9 @@
+# utils/drive_oauth.py
+# This module handles Google Drive OAuth authentication
+# It provides functions to get authorization URL, exchange code for tokens,
+# and get the Drive service object.
+
+
 import streamlit as st
 import requests
 from urllib.parse import urlencode

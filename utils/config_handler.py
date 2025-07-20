@@ -1,3 +1,5 @@
+# utils/config_handler.py
+# This module handles reading and writing project configurations
 import os, json
 
 def save_config(project, path, token, extras={}):

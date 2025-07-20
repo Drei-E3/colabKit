@@ -1,3 +1,6 @@
+# utils/json_editor.py
+# This module provides a JSON editor interface for Streamlit    
+    
 import streamlit as st
 
 st.title("🧩 Config Editor")

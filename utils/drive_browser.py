@@ -1,3 +1,7 @@
+# utils/drive_browser.py
+# This module provides utilities for browsing Google Drive files and folders
+# It uses Streamlit's file browser component to allow users to select folders
+# and returns the selected folder path and ID.
 import os
 import streamlit as st
 from streamlit_file_browser import st_file_browser
